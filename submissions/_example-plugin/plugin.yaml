@@ -1,0 +1,34 @@
+# Example plugin manifest — copy this as a starting point.
+# This plugin is NOT real; it exists only as a reference for contributors.
+schema_version: 1
+name: _example-plugin
+alias: "Example Plugin"
+version: "1.0.0"
+description: "Example plugin that demonstrates the submission format"
+author:
+  name: "Plugin Store Team"
+  github: "yz06276"
+license: MIT
+category: utility
+tags:
+  - example
+  - reference
+
+components:
+  skill:
+    dir: skills/_example-plugin
+
+permissions:
+  wallet:
+    read_balance: true
+    send_transaction: false
+    sign_message: false
+    contract_call: false
+  network:
+    api_calls: []
+    onchainos_commands:
+      - "token search"
+      - "market price"
+  chains:
+    - ethereum
+    - solana

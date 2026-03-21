@@ -1,0 +1,63 @@
+# Plugin Store Community
+
+Community-submitted plugins for the [Plugin Store](https://github.com/yz06276/plugin-store) ecosystem.
+
+## How to Submit a Plugin
+
+1. **Scaffold** your plugin locally:
+   ```bash
+   plugin-store init my-awesome-plugin
+   ```
+
+2. **Develop** your SKILL.md and fill in `plugin.yaml`
+
+3. **Validate** locally:
+   ```bash
+   plugin-store lint submissions/my-awesome-plugin/
+   ```
+
+4. **Fork** this repo, copy your plugin into `submissions/`, and **open a PR**
+
+5. Automated checks run (structure, AI review, security). Once all pass, a maintainer reviews and merges.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide.
+
+## Directory Structure
+
+```
+submissions/
+  my-plugin/
+    plugin.yaml              # Plugin manifest (required)
+    skills/
+      my-plugin/
+        SKILL.md             # Skill definition (required)
+        references/          # Optional reference docs
+    LICENSE                  # Required
+    CHANGELOG.md             # Recommended
+    README.md                # Recommended
+```
+
+## Review Pipeline
+
+```
+PR opened
+  → Phase 2: Structure validation (bot, ~30s)
+  → Phase 3: AI code review (Claude, ~2min)
+  → Phase 4: Security audit (auto, ~3min)
+  → Phase 5: Sandbox test (auto, ~5min)
+  → Phase 6: Human review (maintainer, 1-3 days)
+  → Phase 7: Auto-publish to registry
+```
+
+## Trust Levels
+
+| Level | Label | Who |
+|-------|-------|-----|
+| official | 🟢 | OKX team |
+| dapp-official | 🔵 | Known DApp teams (verified GitHub org) |
+| verified | ✅ | Community devs with 5+ approved submissions |
+| community | 🟡 | First-time / unverified community |
+
+## License
+
+Each plugin must include its own license. This repository is MIT licensed.
