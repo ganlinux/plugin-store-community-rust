@@ -1,6 +1,9 @@
 # Phase 3: AI Code Review (Advisory — does NOT block merge)
 #
-# Generates a comprehensive review report for human maintainers.
+# Before reviewing, this workflow fetches the latest onchainos source code
+# and documentation as context. This ensures the review stays current even
+# as onchainos evolves — no hardcoded command lists.
+#
 # This workflow NEVER fails the PR check — it only provides information.
 
 name: "Phase 3: AI Code Review"
@@ -15,6 +18,11 @@ permissions:
   contents: read
   pull-requests: write
 
+# onchainos source repo — change this if the repo moves
+env:
+  ONCHAINOS_REPO: "okx/onchainos-skills"
+  ONCHAINOS_BRANCH: "main"
+
 jobs:
   ai-review:
     name: AI code review
@@ -24,6 +32,7 @@ jobs:
         with:
           fetch-depth: 0
 
+      # ── Step 1: Detect which plugin is being submitted ──────────
       - name: Detect plugin
         id: detect
         run: |
@@ -33,6 +42,107 @@ jobs:
           echo "plugin_dir=${PLUGIN_DIR}" >> "$GITHUB_OUTPUT"
           echo "plugin_name=${PLUGIN_NAME}" >> "$GITHUB_OUTPUT"
 
+      # ── Step 2: Fetch onchainos source code as review context ───
+      - name: Fetch onchainos source
+        id: onchainos
+        run: |
+          echo "Fetching onchainos source from ${{ env.ONCHAINOS_REPO }}@${{ env.ONCHAINOS_BRANCH }}..."
+
+          git clone --depth=1 --branch "${{ env.ONCHAINOS_BRANCH }}" \
+            "https://github.com/${{ env.ONCHAINOS_REPO }}.git" /tmp/onchainos 2>/dev/null || {
+            echo "::warning::Failed to clone onchainos repo, proceeding without source context"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+          # Build onchainos context document
+          {
+            echo "# onchainos Source Code Reference"
+            echo ""
+            echo "This is the LATEST source code of onchainos CLI — the authoritative"
+            echo "reference for what capabilities are available. Use this to verify"
+            echo "whether a plugin correctly uses onchainos APIs."
+            echo ""
+
+            # ── CLI command definitions (most important) ──────────
+            echo "## CLI Command Definitions (src/main.rs)"
+            echo '```rust'
+            cat /tmp/onchainos/cli/src/main.rs
+            echo '```'
+            echo ""
+
+            echo "## Command Modules (src/commands/mod.rs)"
+            echo '```rust'
+            cat /tmp/onchainos/cli/src/commands/mod.rs
+            echo '```'
+            echo ""
+
+            # ── Each command module (the actual API surface) ──────
+            for cmd_file in /tmp/onchainos/cli/src/commands/*.rs; do
+              CMD_NAME=$(basename "$cmd_file" .rs)
+              [ "$CMD_NAME" = "mod" ] && continue
+              echo "## Command: ${CMD_NAME}"
+              echo '```rust'
+              cat "$cmd_file"
+              echo '```'
+              echo ""
+            done
+
+            # ── Agentic wallet subcommands ────────────────────────
+            for cmd_file in /tmp/onchainos/cli/src/commands/agentic_wallet/*.rs; do
+              CMD_NAME=$(basename "$cmd_file" .rs)
+              [ "$CMD_NAME" = "mod" ] && continue
+              echo "## Wallet: ${CMD_NAME}"
+              echo '```rust'
+              cat "$cmd_file"
+              echo '```'
+              echo ""
+            done
+
+            # ── MCP server tools (available as MCP) ───────────────
+            echo "## MCP Server Tools"
+            echo '```rust'
+            head -200 /tmp/onchainos/cli/src/mcp/mod.rs
+            echo '```'
+            echo ""
+
+            # ── Official skill definitions (the expected format) ──
+            echo "## Official SKILL.md Examples"
+            echo ""
+            for skill_dir in /tmp/onchainos/skills/*/; do
+              SKILL_NAME=$(basename "$skill_dir")
+              SKILL_FILE="${skill_dir}SKILL.md"
+              [ -f "$SKILL_FILE" ] || continue
+              echo "### ${SKILL_NAME}"
+              echo '```markdown'
+              cat "$SKILL_FILE"
+              echo '```'
+              echo ""
+            done
+
+            # ── API client (shows backend endpoints) ──────────────
+            echo "## API Client (src/client.rs)"
+            echo '```rust'
+            head -100 /tmp/onchainos/cli/src/client.rs
+            echo '```'
+            echo ""
+
+            # ── Chain definitions ─────────────────────────────────
+            echo "## Supported Chains (src/chains.rs)"
+            echo '```rust'
+            cat /tmp/onchainos/cli/src/chains.rs
+            echo '```'
+
+          } > /tmp/onchainos_context.txt
+
+          # Report size
+          SIZE=$(wc -c < /tmp/onchainos_context.txt)
+          TOKENS_EST=$((SIZE / 4))
+          echo "onchainos context: ${SIZE} bytes (~${TOKENS_EST} tokens)"
+
+      # ── Step 3: Build the API request ───────────────────────────
       - name: Build API request
         id: build
         run: |
@@ -46,8 +156,10 @@ jobs:
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-          # Build user message from plugin files
+          # Build plugin content
           {
+            echo "# Plugin Submission to Review"
+            echo ""
             echo "## plugin.yaml"
             echo '```yaml'
             cat "$YAML_FILE"
@@ -67,24 +179,49 @@ jobs:
               echo '```'
               echo ""
             done
-          } > /tmp/user_message.txt
+          } > /tmp/plugin_content.txt
 
-          # Read system prompt from repo file
+          # Read system prompt
           cp .github/prompts/ai-review-system.md /tmp/system_prompt.txt
 
-          # Build JSON payload with jq file inputs
-          jq -n \
-            --rawfile system /tmp/system_prompt.txt \
-            --rawfile user /tmp/user_message.txt \
-            '{
-              model: "claude-sonnet-4-20250514",
-              max_tokens: 8192,
-              messages: [{
-                role: "user",
-                content: ($system + "\n\n---\n\nHere are the plugin files to review:\n\n" + $user)
-              }]
-            }' > /tmp/api_request.json
+          # Combine: system prompt + onchainos context + plugin content
+          ONCHAINOS_AVAILABLE="${{ steps.onchainos.outputs.available }}"
+          if [ "$ONCHAINOS_AVAILABLE" = "true" ] && [ -f /tmp/onchainos_context.txt ]; then
+            jq -n \
+              --rawfile system /tmp/system_prompt.txt \
+              --rawfile onchainos /tmp/onchainos_context.txt \
+              --rawfile plugin /tmp/plugin_content.txt \
+              '{
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 8192,
+                messages: [
+                  {
+                    role: "user",
+                    content: ($system + "\n\n---\n\n" + $onchainos + "\n\n---\n\n" + $plugin)
+                  }
+                ]
+              }' > /tmp/api_request.json
+          else
+            jq -n \
+              --rawfile system /tmp/system_prompt.txt \
+              --rawfile plugin /tmp/plugin_content.txt \
+              '{
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 8192,
+                messages: [
+                  {
+                    role: "user",
+                    content: ($system + "\n\n---\n\n(onchainos source not available — review based on prompt knowledge only)\n\n---\n\n" + $plugin)
+                  }
+                ]
+              }' > /tmp/api_request.json
+          fi
 
+          # Report total size
+          SIZE=$(wc -c < /tmp/api_request.json)
+          echo "Total API request: ${SIZE} bytes"
+
+      # ── Step 4: Call Claude API ─────────────────────────────────
       - name: Call Claude API
         id: ai_review
         if: steps.build.outputs.skip != 'true'
@@ -122,6 +259,7 @@ jobs:
             echo "merge_rec=caveats" >> "$GITHUB_OUTPUT"
           fi
 
+      # ── Step 5: Post report to PR ──────────────────────────────
       - name: Post review report
         if: always() && steps.build.outputs.skip != 'true'
         uses: actions/github-script@v7
@@ -138,6 +276,7 @@ jobs:
             const pluginName = '${{ steps.detect.outputs.plugin_name }}';
             const score = '${{ steps.ai_review.outputs.score }}' || 'N/A';
             const mergeRec = '${{ steps.ai_review.outputs.merge_rec }}' || 'manual';
+            const hasOnchainos = '${{ steps.onchainos.outputs.available }}' === 'true';
 
             let recIcon, recText;
             if (mergeRec === 'ready') {
@@ -149,6 +288,10 @@ jobs:
             } else {
               recIcon = '👤'; recText = 'Manual review required';
             }
+
+            const contextNote = hasOnchainos
+              ? '🔗 Reviewed against **latest onchainos source code** (live from main branch)'
+              : '⚠️ onchainos source was unavailable — review based on AI knowledge only';
 
             // Split into collapsible sections
             const sections = review.split(/(?=^## \d+\.)/m).filter(s => s.trim());
@@ -169,6 +312,8 @@ jobs:
               `## 📋 Phase 3: AI Code Review Report — Score: ${score}/100`,
               '',
               `> **Plugin**: \`${pluginName}\` | **Recommendation**: ${recIcon} ${recText}`,
+              `> `,
+              `> ${contextNote}`,
               `> `,
               `> *This is an advisory report. It does NOT block merging. Final decision is made by human reviewers.*`,
               '',
