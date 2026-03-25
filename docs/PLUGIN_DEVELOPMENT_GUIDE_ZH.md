@@ -11,7 +11,7 @@
 3. [第一步：生成 plugin 脚手架](#3-第一步生成 plugin 脚手架)
 4. [第二步：编写 plugin.yaml](#4-第二步编写-pluginyaml)
 5. [第三步：编写 SKILL.md](#5-第三步编写-skillmd)
-6. [第四步：声明权限](#6-第四步声明权限)
+6. [第四步：声明链和 API 调用](#6-第四步声明链和-api-调用)
 7. [第五步：本地验证](#7-第五步本地验证)
 8. [第六步：通过 Pull Request 提交](#8-第六步通过-pull-request-提交)
 9. [提交后会发生什么](#9-提交后会发生什么)
@@ -109,7 +109,7 @@ my-awesome-plugin/
 
 ## 4. 第二步：编写 plugin.yaml
 
-plugin.yaml 是 plugin 的清单文件，描述 plugin 的基本信息、组件和权限。
+plugin.yaml 是 plugin 的清单文件，描述 plugin 的基本信息和组件。
 
 ### 4A. 纯 Skill 示例
 
@@ -134,21 +134,10 @@ components:
  skill:
  dir: skills/sol-price-checker # SKILL.md 所在目录的路径
 
-permissions:
- wallet:
- read_balance: false
- send_transaction: false
- sign_message: false
- contract_call: false
- network:
- api_calls: []
- onchainos_commands:
- - "token search"
- - "market price"
- - "market kline"
- - "token trending"
- chains:
+chains:
  - solana
+
+api_calls: []
 
 extra:
  protocols: [] # 例如 [uniswap-v3, raydium]
@@ -187,12 +176,12 @@ build:
  source_dir: "." # 仓库内路径（默认：根目录）
  binary_name: defi-yield-mcp # 编译产物名
 
-permissions:
- api_calls:
- - "api.defillama.com" # 声明所有外部 API
- chains:
+chains:
  - ethereum
  - base
+
+api_calls:
+ - "api.defillama.com"
 
 extra:
  protocols: [morpho, aave]
@@ -225,7 +214,8 @@ git rev-parse HEAD
 | `category` | 是 | `trading-strategy`, `defi-protocol`, `analytics`, `utility`, `security`, `wallet`, `nft` |
 | `tags` | 否 | 搜索关键词 |
 | `components.skill.dir` | 是 | SKILL.md 所在目录的相对路径 |
-| `permissions` | 是 | 见[第四步：声明权限](#6-第四步声明权限) |
+| `chains` | 否 | plugin 运行的区块链列表（信息性字段） |
+| `api_calls` | 否 | plugin 调用的外部 API 域名列表（供审查参考；lint 会据此检查） |
 | `extra.risk_level` | 否 | `low`、`medium` 或 `high` |
 
 ### 命名规则
@@ -382,45 +372,21 @@ tags:
 
 ---
 
-## 6. 第四步：声明权限
+## 6. 第四步：声明链和 API 调用
 
-每个 plugin 都必须声明自己能做什么。审查过程中会进行验证。
-
-### 钱包权限
+你只需要声明 `chains` 和 `api_calls` — 两者都是 plugin.yaml 中的顶级字段。实际权限（钱包访问、交易签名等）由提交时的 AI 审查自动检测。
 
 ```yaml
-permissions:
- wallet:
- read_balance: true # 能否读取钱包余额？
- send_transaction: false # 能否发起转账？
- sign_message: false # 能否签名消息？
- contract_call: false # 能否调用智能合约？
-```
-
-> **重要提示：** 社区 plugin 首次提交不允许设置 `send_transaction` 或 `contract_call` 为 `true`。你需要达到 Verified Publisher（认证开发者）等级后才能使用（需 5 次以上审核通过的提交）。
-
-### 网络权限
-
-```yaml
- network:
- api_calls: [] # 外部 API 域名（如有）
- onchainos_commands: # 你的 SKILL.md 中使用的每一个 onchainos 命令
- - "token search"
- - "market price"
- - "swap quote"
-```
-
-你必须列出 SKILL.md 中引用的每一个 `onchainos` 命令。AI 审查会交叉验证。
-
-### 链声明
-
-```yaml
- chains:
+chains:
  - solana
  - ethereum
+
+api_calls:
+ - "api.defillama.com"
 ```
 
-声明你的 plugin 在哪些区块链上运行。
+- **`chains`** — plugin 运行的区块链列表（信息性字段）。
+- **`api_calls`** — plugin 调用的外部 API 域名列表。Linter 会检查你的 SKILL.md 中的 URL 是否与此列表匹配。
 
 ---
 
@@ -446,7 +412,7 @@ Linting ./my-awesome-plugin/...
 Linting ./my-awesome-plugin/...
 
  ❌ [E031] name 'My-Plugin' must be lowercase alphanumeric with hyphens only
- ❌ [E065] permissions field is required
+ ❌ [E065] chains or api_calls field is required
  ⚠️ [W091] SKILL.md frontmatter missing recommended field: description
 
 ✗ Plugin 'My-Plugin': 2 error(s), 1 warning(s)
@@ -464,7 +430,7 @@ Linting ./my-awesome-plugin/...
 | E035 | 版本号无效 | 使用语义化版本号：`1.0.0`，而不是 `1.0` 或 `v1.0.0` |
 | E041 | 缺少 LICENSE | 在提交目录中添加 LICENSE 文件 |
 | E052 | 缺少 SKILL.md | 确保 SKILL.md 存在于 `components.skill.dir` 指定的路径中 |
-| E065 | 缺少 permissions | 在 plugin.yaml 中添加 `permissions` 部分 |
+| E065 | 缺少 chains/api_calls | 在 plugin.yaml 中添加 `chains` 和/或 `api_calls` 字段 |
 | E110 | 不允许 MCP 组件 | 社区 plugin 不能包含 MCP 组件 |
 | E111 | 不允许 Binary 组件 | 社区 plugin 不能包含 Binary 组件 |
 
@@ -555,7 +521,7 @@ Phase 3：AI 代码审查（Claude）
 维护者会审核：
 
 - plugin 是否有意义？
-- 权限声明是否准确？
+- chains 和 api_calls 是否准确？
 - SKILL.md 写得好不好？
 - 是否存在安全隐患？
 
@@ -578,9 +544,9 @@ Phase 3：AI 代码审查（Claude）
 3. 更新 CHANGELOG.md
 4. 创建 PR，标题格式：`[update] my-awesome-plugin v1.1.0`
 
-### 权限变更（需要完整审核）
+### 链或 API 变更（需要完整审核）
 
-如果你的更新修改了 `permissions` 部分，审核会更加严格。AI 审查报告会重点标注权限变化。
+如果你的更新修改了 `chains` 或 `api_calls`，审核会更加严格。AI 审查报告会重点标注这些变化。
 
 ---
 
@@ -591,14 +557,12 @@ Phase 3：AI 代码审查（Claude）
 - 使用 SKILL.md 定义技能
 - 引用任何 onchainos CLI 命令
 - 包含参考文档
-- 声明只读的钱包权限
+- 声明 chains 和 api_calls
 
 ### 社区 plugin 不能做的
 
 - 包含 MCP Server 组件（代码执行）
 - 包含 Binary 组件（代码执行）
-- 首次提交声明 `send_transaction: true`
-- 首次提交声明 `contract_call: true`
 - 使用保留名称前缀（`okx-`、`official-`、`plugin-store-`）
 - 绕过 onchainos CLI（使用直接 RPC、外部价格 API、web3 库）
 - 包含 prompt injection 模式
@@ -608,8 +572,8 @@ Phase 3：AI 代码审查（Claude）
 
 | 等级 | 谁 | 能力范围 |
 |------|-----|---------|
-| Community Developer（社区开发者） | 首次/未验证贡献者 | 仅 Skill，只读权限 |
-| Verified Third Party（认证第三方） | 知名 DApp 团队或通过验证的社区开发者 | Skill + 更高权限 |
+| Community Developer（社区开发者） | 首次/未验证贡献者 | 仅 Skill |
+| Verified Third Party（认证第三方） | 知名 DApp 团队或通过验证的社区开发者 | Skill + MCP/Binary |
 | OKX Official（OKX 官方） | OKX 团队内部开发 | 完整能力 |
 
 ---
@@ -696,14 +660,10 @@ build:
  # main: src/index.ts # TypeScript/Python 需要指定
  # npm_scope: "@plugin-store" # Node.js 需要指定
 
-permissions:
- wallet:
- read_balance: true
- network:
- onchainos_commands:
- - "token info"
- - "swap quote"
- chains: [ethereum]
+chains:
+ - ethereum
+
+api_calls: []
 ```
 
 ### 如何获取 commit SHA

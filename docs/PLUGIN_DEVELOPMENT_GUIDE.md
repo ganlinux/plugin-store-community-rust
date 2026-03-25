@@ -11,7 +11,7 @@
 3. [Step 1: Scaffold Your Plugin](#3-step-1-scaffold-your-plugin)
 4. [Step 2: Write plugin.yaml](#4-step-2-write-pluginyaml)
 5. [Step 3: Write SKILL.md](#5-step-3-write-skillmd)
-6. [Step 4: Declare Permissions](#6-step-4-declare-permissions)
+6. [Step 4: Declare Chains and API Calls](#6-step-4-declare-chains-and-api-calls)
 7. [Step 5: Local Validation](#7-step-5-local-validation)
 8. [Step 6: Submit via Pull Request](#8-step-6-submit-via-pull-request)
 9. [What Happens After Submission](#9-what-happens-after-submission)
@@ -134,21 +134,10 @@ components:
   skill:
     dir: skills/sol-price-checker    # Path to your SKILL.md directory
 
-permissions:
-  wallet:
-    read_balance: false
-    send_transaction: false
-    sign_message: false
-    contract_call: false
-  network:
-    api_calls: []
-    onchainos_commands:
-      - "token search"
-      - "market price"
-      - "market kline"
-      - "token trending"
-  chains:
-    - solana
+chains:
+  - solana
+
+api_calls: []
 
 extra:
   protocols: []                      # e.g. [uniswap-v3, raydium]
@@ -187,12 +176,12 @@ build:
   source_dir: "."                       # Path within repo (default: root)
   binary_name: defi-yield-mcp           # Compiled output name
 
-permissions:
-  api_calls:
-    - "api.defillama.com"              # Declare all external APIs
-  chains:
-    - ethereum
-    - base
+chains:
+  - ethereum
+  - base
+
+api_calls:
+  - "api.defillama.com"
 
 extra:
   protocols: [morpho, aave]
@@ -225,7 +214,8 @@ git rev-parse HEAD
 | `category` | Yes | One of: `trading-strategy`, `defi-protocol`, `analytics`, `utility`, `security`, `wallet`, `nft` |
 | `tags` | No | Keywords for search |
 | `components.skill.dir` | Yes | Relative path to the directory containing SKILL.md |
-| `permissions` | Yes | See [Step 4: Declare Permissions](#6-step-4-declare-permissions) |
+| `chains` | No | List of blockchains the plugin operates on (informational) |
+| `api_calls` | No | List of external API domains the plugin calls (reviewer reference; lint checks against this) |
 | `extra.risk_level` | No | `low`, `medium`, or `high` |
 
 ### Naming Rules
@@ -382,45 +372,21 @@ Find the optimal swap route to enter a DeFi position.
 
 ---
 
-## 6. Step 4: Declare Permissions
+## 6. Step 4: Declare Chains and API Calls
 
-Every plugin must declare what it can do. This is verified during review.
-
-### Wallet Permissions
+The only declarations you need are `chains` and `api_calls` — both are top-level fields in plugin.yaml. Actual permissions (wallet access, transaction signing, etc.) are auto-detected by the AI review during submission.
 
 ```yaml
-permissions:
-  wallet:
-    read_balance: true       # Can read wallet balances?
-    send_transaction: false   # Can initiate transfers?
-    sign_message: false       # Can sign messages?
-    contract_call: false      # Can call smart contracts?
+chains:
+  - solana
+  - ethereum
+
+api_calls:
+  - "api.defillama.com"
 ```
 
-> **Important:** Community plugins cannot set `send_transaction` or `contract_call` to `true` on their first submission. You must reach Verified Publisher status first (5+ approved submissions).
-
-### Network Permissions
-
-```yaml
-  network:
-    api_calls: []            # External API domains (if any)
-    onchainos_commands:      # EVERY onchainos command your skill uses
-      - "token search"
-      - "market price"
-      - "swap quote"
-```
-
-You must list every `onchainos` command your SKILL.md references. The AI review will cross-check this.
-
-### Chain Declaration
-
-```yaml
-  chains:
-    - solana
-    - ethereum
-```
-
-Declare which blockchains your plugin operates on.
+- **`chains`** — list of blockchains your plugin operates on (informational).
+- **`api_calls`** — list of external API domains your plugin calls. The linter checks that any URLs in your SKILL.md match this list.
 
 ---
 
@@ -446,7 +412,7 @@ Linting ./my-awesome-plugin/...
 Linting ./my-awesome-plugin/...
 
   ❌ [E031] name 'My-Plugin' must be lowercase alphanumeric with hyphens only
-  ❌ [E065] permissions field is required
+  ❌ [E065] chains or api_calls field is required
   ⚠️  [W091] SKILL.md frontmatter missing recommended field: description
 
 ✗ Plugin 'My-Plugin': 2 error(s), 1 warning(s)
@@ -464,7 +430,7 @@ Fix all errors (❌) before submitting. Warnings (⚠️) are advisory.
 | E035 | Invalid version | Use semantic versioning: `1.0.0`, not `1.0` or `v1.0.0` |
 | E041 | Missing LICENSE | Add a LICENSE file to your submission directory |
 | E052 | Missing SKILL.md | Ensure SKILL.md exists in the path specified by `components.skill.dir` |
-| E065 | Missing permissions | Add the `permissions` section to plugin.yaml |
+| E065 | Missing chains/api_calls | Add `chains` and/or `api_calls` fields to plugin.yaml |
 | E110 | MCP not allowed | Community plugins cannot include MCP components |
 | E111 | Binary not allowed | Community plugins cannot include Binary components |
 
@@ -555,7 +521,7 @@ Phase 3: AI Code Review (Claude)
 A maintainer reviews:
 
 - Does the plugin make sense?
-- Are permissions accurate?
+- Are chains and api_calls accurate?
 - Is the SKILL.md well-written?
 - Any security concerns?
 
@@ -578,9 +544,9 @@ Your plugin is automatically:
 3. Update CHANGELOG.md
 4. Open a PR with title: `[update] my-awesome-plugin v1.1.0`
 
-### Permission Change (requires full review)
+### Chain or API Change (requires full review)
 
-If your update changes the `permissions` section, the review will be more thorough. The AI review report will highlight permission changes.
+If your update changes `chains` or `api_calls`, the review will be more thorough. The AI review report will highlight these changes.
 
 ---
 
@@ -591,14 +557,12 @@ If your update changes the `permissions` section, the review will be more thorou
 - Define skills using SKILL.md
 - Reference any onchainos CLI command
 - Include reference documentation
-- Declare read-only wallet permissions
+- Declare chains and api_calls
 
 ### What Community Plugins CANNOT Do
 
 - Include MCP server components (code execution)
 - Include binary components (code execution)
-- Declare `send_transaction: true` on first submission
-- Declare `contract_call: true` on first submission
 - Use reserved name prefixes (`okx-`, `official-`, `plugin-store-`)
 - Bypass onchainos CLI (use direct RPC, external price APIs, web3 libraries)
 - Include prompt injection patterns
@@ -608,8 +572,8 @@ If your update changes the `permissions` section, the review will be more thorou
 
 | Level | Who | Capabilities |
 |-------|-----|-------------|
-| Community Developer | First-time / unverified contributors | Skill only, read-only permissions |
-| Verified Third Party | Known DApp teams or verified community developers | Skill + elevated permissions |
+| Community Developer | First-time / unverified contributors | Skill only |
+| Verified Third Party | Known DApp teams or verified community developers | Skill + MCP/Binary |
 | OKX Official | OKX team — internal development | Full capabilities |
 
 ---
@@ -696,14 +660,10 @@ build:
   # main: src/index.ts               # Required for typescript/python
   # npm_scope: "@plugin-store"       # Required for node
 
-permissions:
-  wallet:
-    read_balance: true
-  network:
-    onchainos_commands:
-      - "token info"
-      - "swap quote"
-  chains: [ethereum]
+chains:
+  - ethereum
+
+api_calls: []
 ```
 
 ### How to get the commit SHA
