@@ -21,6 +21,7 @@
 13. [Submitting Plugins with Source Code (Binary)](#13-submitting-plugins-with-source-code-binary)
 14. [onchainos Command Reference](#14-onchainos-command-reference)
 15. [FAQ](#15-faq)
+16. [Getting Help](#16-getting-help)(#15-faq)
 
 ---
 
@@ -766,3 +767,12 @@ A: You declared a Binary component but didn't include a `build` section. We need
 
 **Q: The build failed in CI but I can compile locally. Why?**
 A: Our CI compiles on Ubuntu Linux. Ensure your code builds on Linux, not just macOS/Windows. Check the build logs in the GitHub Actions run for specific errors.
+
+---
+
+## 16. Getting Help
+
+- Open an [issue](https://github.com/yz06276/plugin-store-community/issues) on GitHub
+- See `submissions/_example-plugin/` for a complete reference plugin
+- Run `plugin-store lint` locally before submitting — it catches most issues
+- Check the [GitHub Actions logs](https://github.com/yz06276/plugin-store-community/actions) if your PR checks fail

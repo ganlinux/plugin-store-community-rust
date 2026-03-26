@@ -1,78 +1,93 @@
 # Plugin Store Community
 
-Community-submitted plugins for the [Plugin Store](https://github.com/yz06276/plugin-store) ecosystem.
+Submit your plugin to the [Plugin Store](https://github.com/yz06276/plugin-store) ecosystem in 5 minutes.
 
-## Documentation
+## Quick Start (5 steps)
 
-- **[Plugin Development Guide (English)](./docs/PLUGIN_DEVELOPMENT_GUIDE.md)** — Full guide to developing and submitting plugins
-- **[plugin 开发指南（中文）](./docs/PLUGIN_DEVELOPMENT_GUIDE_ZH.md)** — 完整的 plugin 开发与提交指南
-- **[Contributing Guide](./CONTRIBUTING.md)** — Quick reference for contributors
+### Step 1: Create your plugin
 
-## How to Submit a Plugin
-
-1. **Scaffold** your plugin locally:
-   ```bash
-   plugin-store init my-awesome-plugin
-   ```
-
-2. **Develop** your SKILL.md and fill in `plugin.yaml`
-
-3. **Validate** locally:
-   ```bash
-   plugin-store lint submissions/my-awesome-plugin/
-   ```
-
-4. **Clone** this repo, copy your plugin into `submissions/`, **push** and **open a PR**
-
-5. Automated checks run (structure, AI review, security). Once all pass, a maintainer reviews and merges.
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide.
-
-## Core Concept: Skill is the Entry Point
-
-Every plugin must include a SKILL.md. It is the **single entry point** that tells the AI agent how to use your plugin — whether it's a pure Skill or includes a binary. The Skill orchestrates onchainos CLI commands and your custom tools.
-
-```
-SKILL.md (orchestrator)
-  ├── onchainos CLI commands (platform capabilities)
-  └── Your binary commands (your capabilities)
+```bash
+plugin-store init my-plugin
 ```
 
-Any developer can also include binaries by submitting source code — we compile it. See the [development guide](./docs/PLUGIN_DEVELOPMENT_GUIDE.md) for details.
-
-## Directory Structure
+This generates a ready-to-edit template:
 
 ```
-submissions/
-  my-plugin/
-    plugin.yaml              # Plugin manifest (required)
-    skills/
-      my-plugin/
-        SKILL.md             # Skill definition (required) — THE entry point
-        references/          # Optional reference docs
-    LICENSE                  # Required
-    CHANGELOG.md             # Recommended
-    README.md                # Recommended
+my-plugin/
+├── plugin.yaml       ← fill in your plugin info
+├── skills/
+│   └── my-plugin/
+│       └── SKILL.md  ← write what your plugin does
+├── LICENSE
+└── README.md
 ```
 
-## Review Pipeline
+### Step 2: Edit SKILL.md
+
+SKILL.md teaches the AI agent how to use your plugin. Write what your plugin does and which `onchainos` commands it uses:
+
+```markdown
+# My Plugin
+
+## Commands
+
+### Search Token
+​```bash
+onchainos token search --query "ETH" --chain ethereum
+​```
+**When to use**: when the user asks to find a token.
+```
+
+### Step 3: Check locally
+
+```bash
+plugin-store lint ./my-plugin/
+```
+
+Fix any errors (❌) it reports, then re-run until you see ✓.
+
+### Step 4: Submit
+
+```bash
+git clone git@github.com:yz06276/plugin-store-community.git
+cd plugin-store-community
+git checkout -b submit/my-plugin
+cp -r /path/to/my-plugin submissions/my-plugin
+git add submissions/my-plugin/
+git commit -m "[new-plugin] my-plugin v1.0.0"
+git push origin submit/my-plugin
+```
+
+Then open a **Pull Request** on GitHub.
+
+### Step 5: Wait for review
+
+Your PR automatically gets:
 
 ```
-PR opened
-  → Phase 2: Structure validation (bot, ~30s)
-  → Phase 3: AI code review (Claude, ~2min)
-  → Phase 4: Security audit (auto, ~3min)
-  → Phase 5: Sandbox test (auto, ~5min)
-  → Phase 6: Human review (maintainer, 1-3 days)
-  → Phase 7: Auto-publish to registry
+✅ Structure check (~30s)     — bot validates plugin.yaml + SKILL.md
+📋 AI code review (~2min)     — Claude reads your code and writes a report
+🔨 Build check (if binary)    — compiles your source code
+👤 Human review (1-3 days)    — maintainer reads AI report, clicks Merge
 ```
 
-## What You Can Submit
+Once merged, your plugin is live:
+```bash
+plugin-store install my-plugin
+```
 
-| Component | Availability | How |
-|-----------|-------------|-----|
-| Skill (SKILL.md) | All developers | Include in submissions/ directory |
-| Binary (source code) | All developers | Add `build` section to plugin.yaml, we compile |
+---
+
+## Full Guides
+
+- **[Development Guide (English)](./PLUGIN_DEVELOPMENT_GUIDE.md)** — all details, examples, error codes, FAQ
+- **[开发指南（中文）](./PLUGIN_DEVELOPMENT_GUIDE_ZH.md)** — 完整的 plugin 开发与提交指南
+
+## Getting Help
+
+- Open an [issue](https://github.com/yz06276/plugin-store-community/issues)
+- See `submissions/_example-plugin/` for a complete reference plugin
+- Read the full [Development Guide](./PLUGIN_DEVELOPMENT_GUIDE.md) for troubleshooting
 
 ## License
 

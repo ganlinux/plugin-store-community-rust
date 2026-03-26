@@ -7,8 +7,7 @@
 ### Checklist
 
 - [ ] `plugin-store lint` passes locally with no errors
-- [ ] I have read the [Contributing Guide](../CONTRIBUTING.md)
-- [ ] The `permissions` in plugin.yaml accurately reflects all capabilities
+- [ ] I have read the [Development Guide](../PLUGIN_DEVELOPMENT_GUIDE.md)
 - [ ] My plugin does NOT use reserved prefixes (`okx-`, `official-`, `plugin-store-`)
 - [ ] LICENSE file is included
 - [ ] SKILL.md has YAML frontmatter with `name` and `description`
@@ -23,7 +22,7 @@
 
 ### Security Considerations
 
-<!-- Does it access wallets? Initiate transactions? Call contracts? Any risk the reviewer should know about? -->
+<!-- Does it access wallets? Initiate transactions? Any risk the reviewer should know about? -->
 
 ### Testing
 

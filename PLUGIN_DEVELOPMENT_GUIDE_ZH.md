@@ -21,6 +21,7 @@
 13. [提交含源码的 plugin（Binary）](#13-提交含源码的 pluginbinary)
 14. [onchainos 命令参考](#14-onchainos-命令参考)
 15. [常见问题](#15-常见问题)
+16. [获取帮助](#16-获取帮助)(#15-常见问题)
 
 ---
 
@@ -770,3 +771,12 @@ A: 你声明了 Binary 组件但没有 `build` 配置。我们需要知道你的
 
 **Q: CI 中编译失败了，但我本地可以编译。为什么？**
 A: 我们的 CI 在 Ubuntu Linux 上编译。确保你的代码能在 Linux 上编译，而不仅仅是 macOS/Windows。查看 GitHub Actions 运行日志获取具体错误信息。
+
+---
+
+## 16. 获取帮助
+
+- 在 GitHub 上提交 [issue](https://github.com/yz06276/plugin-store-community/issues)
+- 查看 `submissions/_example-plugin/` 获取完整的参考 plugin
+- 提交前在本地运行 `plugin-store lint` — 它能发现大部分问题
+- 如果 PR 检查失败，查看 [GitHub Actions 日志](https://github.com/yz06276/plugin-store-community/actions)
