@@ -518,27 +518,22 @@ If your update changes `api_calls`, the review will be more thorough. The AI rev
 
 ## 11. Rules & Restrictions
 
-### What Community Plugins CAN Do
+### What You CAN Do
 
 - Define skills using SKILL.md
-- Reference any onchainos CLI command
+- Reference any onchainos CLI command for on-chain operations
+- Query external data sources (third-party DeFi APIs, market data, etc.)
 - Include reference documentation
-- Declare api_calls
+- Submit binary source code (we compile it via `build` section)
+- Declare api_calls for external API domains
 
-### What Community Plugins CANNOT Do
+### What You CANNOT Do
 
-- Include binary components (code execution)
+- Submit pre-compiled binaries (.exe, .dll, .so, etc.) — must submit source code
 - Use reserved name prefixes (`okx-`, `official-`, `plugin-store-`)
-- Bypass onchainos CLI (use direct RPC, external price APIs, web3 libraries)
-- Include prompt injection patterns
+- Bypass onchainos for on-chain write operations (signing, broadcasting, swaps)
+- Include prompt injection patterns in SKILL.md
 - Exceed file size limits (200KB per file, 5MB total)
-
-### What Any Developer Can Submit
-
-| Component | How |
-|-----------|-----|
-| Skill (SKILL.md) | Include in submissions/ directory |
-| Binary | Submit source code in your GitHub repo, we compile it (requires `build` section) |
 
 ---
 

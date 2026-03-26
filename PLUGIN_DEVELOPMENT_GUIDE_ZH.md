@@ -550,28 +550,22 @@ Phase 3：AI 代码审查（Claude）
 
 ## 11. 规则与限制
 
-### 社区 plugin 可以做的
+### 你可以做的
 
 - 使用 SKILL.md 定义技能
-- 引用任何 onchainos CLI 命令
+- 引用任何 onchainos CLI 命令进行链上操作
+- 自由查询外部数据源（第三方 DeFi API、行情数据等）
 - 包含参考文档
-- 声明 api_calls
+- 提交 Binary 源码（我们通过 `build` 配置编译）
+- 声明 api_calls 外部 API 域名
 
-### 社区 plugin 不能做的
+### 你不能做的
 
-- 包含 binary 组件（代码执行）
-- 包含 Binary 组件（代码执行）
+- 提交预编译的二进制文件（.exe、.dll、.so 等）— 必须提交源码
 - 使用保留名称前缀（`okx-`、`official-`、`plugin-store-`）
-- 绕过 onchainos CLI 进行链上操作（钱包签名、交易广播、合约调用等）
-- 包含 prompt injection 模式
+- 绕过 onchainos 进行链上写操作（签名、广播、Swap）
+- 在 SKILL.md 中包含 prompt injection 模式
 - 超过文件大小限制（单文件 200KB，总计 5MB）
-
-### 所有开发者可以提交的内容
-
-| 组件 | 方式 |
-|------|------|
-| Skill (SKILL.md) | 放入 submissions/ 目录 |
-| Binary（源码） | 源码放在你自己的 GitHub 仓库，在 plugin.yaml 中添加 `build` 配置，我们编译 |
 
 ---
 
