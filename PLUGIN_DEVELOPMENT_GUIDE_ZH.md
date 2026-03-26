@@ -11,7 +11,7 @@
 3. [第一步：生成 plugin 脚手架](#section-3)
 4. [第二步：编写 plugin.yaml](#section-4)
 5. [第三步：编写 SKILL.md](#section-5)
-6. [第四步：声明链和 API 调用](#section-6)
+6. [第四步：声明 API 调用](#section-6)
 7. [第五步：本地验证](#section-7)
 8. [第六步：通过 Pull Request 提交](#section-8)
 9. [提交后会发生什么](#section-9)
@@ -163,7 +163,6 @@ components:
  skill:
  dir: skills/sol-price-checker # SKILL.md 所在目录的路径
 
-chains:
  - solana
 
 api_calls: []
@@ -198,7 +197,6 @@ build:
  source_dir: "." # 仓库内路径（默认：根目录）
  binary_name: defi-yield # 编译产物名
 
-chains:
  - ethereum
  - base
 
@@ -234,7 +232,6 @@ git rev-parse HEAD
 | `category` | 是 | `trading-strategy`, `defi-protocol`, `analytics`, `utility`, `security`, `wallet`, `nft` |
 | `tags` | 否 | 搜索关键词 |
 | `components.skill.dir` | 是 | SKILL.md 所在目录的相对路径 |
-| `chains` | 否 | plugin 运行的区块链列表（信息性字段） |
 | `api_calls` | 否 | plugin 调用的外部 API 域名列表（供审查参考；lint 会据此检查） |
 
 ### 命名规则
@@ -395,12 +392,11 @@ tags:
 
 <a id="section-6"></a>
 
-## 6. 第四步：声明链和 API 调用
+## 6. 第四步：声明 API 调用
 
-你只需要声明 `chains` 和 `api_calls` — 两者都是 plugin.yaml 中的顶级字段。实际权限（钱包访问、交易签名等）由提交时的 AI 审查自动检测。
+你只需要声明 `api_calls` — 两者都是 plugin.yaml 中的顶级字段。实际权限（钱包访问、交易签名等）由提交时的 AI 审查自动检测。
 
 ```yaml
-chains:
  - solana
  - ethereum
 
@@ -408,7 +404,6 @@ api_calls:
  - "api.defillama.com"
 ```
 
-- **`chains`** — plugin 运行的区块链列表（信息性字段）。
 - **`api_calls`** — plugin 调用的外部 API 域名列表。Linter 会检查你的 SKILL.md 中的 URL 是否与此列表匹配。
 
 ---
@@ -437,7 +432,7 @@ Linting ./my-awesome-plugin/...
 Linting ./my-awesome-plugin/...
 
  ❌ [E031] name 'My-Plugin' must be lowercase alphanumeric with hyphens only
- ❌ [E065] chains or api_calls field is required
+ ❌ [E065] api_calls field is required
  ⚠️ [W091] SKILL.md frontmatter missing recommended field: description
 
 ✗ Plugin 'My-Plugin': 2 error(s), 1 warning(s)
@@ -455,7 +450,7 @@ Linting ./my-awesome-plugin/...
 | E035 | 版本号无效 | 使用语义化版本号：`1.0.0`，而不是 `1.0` 或 `v1.0.0` |
 | E041 | 缺少 LICENSE | 在提交目录中添加 LICENSE 文件 |
 | E052 | 缺少 SKILL.md | 确保 SKILL.md 存在于 `components.skill.dir` 指定的路径中 |
-| E065 | 缺少 chains/api_calls | 在 plugin.yaml 中添加 `chains` 和/或 `api_calls` 字段 |
+| E065 | 缺少 api_calls | 在 plugin.yaml 中添加 `api_calls` 字段 |
 | E111 | 不允许 Binary 组件 | 社区 plugin 不能包含 Binary 组件 |
 
 ---
@@ -545,7 +540,7 @@ Phase 3：AI 代码审查（Claude）
 维护者会审核：
 
 - plugin 是否有意义？
-- chains 和 api_calls 是否准确？
+- api_calls 是否准确？
 - SKILL.md 写得好不好？
 - 是否存在安全隐患？
 
@@ -572,7 +567,7 @@ Phase 3：AI 代码审查（Claude）
 
 ### 链或 API 变更（需要完整审核）
 
-如果你的更新修改了 `chains` 或 `api_calls`，审核会更加严格。AI 审查报告会重点标注这些变化。
+如果你的更新修改了 `api_calls`，审核会更加严格。AI 审查报告会重点标注这些变化。
 
 ---
 
@@ -585,7 +580,7 @@ Phase 3：AI 代码审查（Claude）
 - 使用 SKILL.md 定义技能
 - 引用任何 onchainos CLI 命令
 - 包含参考文档
-- 声明 chains 和 api_calls
+- 声明 api_calls
 
 ### 社区 plugin 不能做的
 
@@ -685,7 +680,6 @@ build:
  binary_name: my-binary-tool # 编译产物名
  # main: src/index.ts # TypeScript/Python 需要指定
 
-chains:
  - ethereum
 
 api_calls: []

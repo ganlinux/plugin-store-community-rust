@@ -42,7 +42,6 @@ components:
   skill:
     dir: skills/my-plugin
 
-chains: [ethereum]   # which blockchains your plugin operates on
 api_calls: []        # external API domains, if any
 ```
 

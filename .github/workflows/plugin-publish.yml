@@ -72,7 +72,6 @@ jobs:
             TAGS=$(yq '.tags | @json' "$YAML_FILE")
             RISK_LEVEL=$(yq '.extra.risk_level // "low"' "$YAML_FILE")
             PROTOCOLS=$(yq '.extra.protocols // [] | @json' "$YAML_FILE")
-            CHAINS=$(yq '.permissions.chains // [] | @json' "$YAML_FILE")
 
             # Determine the skill component — community plugins store skills in this repo
             SKILL_DIR=$(yq '.components.skill.dir // ""' "$YAML_FILE")
@@ -93,7 +92,6 @@ jobs:
               --arg repo "$SKILL_REPO" \
               --arg dir "$SKILL_DIR" \
               --arg commit "$COMMIT_SHA" \
-              --argjson chains "$CHAINS" \
               --argjson protocols "$PROTOCOLS" \
               --arg risk "$RISK_LEVEL" \
               --arg link "https://github.com/${SKILL_REPO}" \
@@ -114,7 +112,6 @@ jobs:
                   }
                 },
                 extra: {
-                  chains: $chains,
                   protocols: $protocols,
                   risk_level: $risk
                 },

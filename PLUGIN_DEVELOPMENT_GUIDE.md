@@ -11,7 +11,7 @@
 3. [Step 1: Scaffold Your Plugin](#3-step-1-scaffold-your-plugin)
 4. [Step 2: Write plugin.yaml](#4-step-2-write-pluginyaml)
 5. [Step 3: Write SKILL.md](#5-step-3-write-skillmd)
-6. [Step 4: Declare Chains and API Calls](#6-step-4-declare-chains-and-api-calls)
+6. [Step 4: Declare API Calls](#6-step-4-declare-api-calls)
 7. [Step 5: Local Validation](#7-step-5-local-validation)
 8. [Step 6: Submit via Pull Request](#8-step-6-submit-via-pull-request)
 9. [What Happens After Submission](#9-what-happens-after-submission)
@@ -147,7 +147,6 @@ author:
 license: MIT
 category: analytics                  # See categories below
 tags:
-  - solana
   - price
   - analytics
 
@@ -155,8 +154,6 @@ components:
   skill:
     dir: skills/sol-price-checker    # Path to your SKILL.md directory
 
-chains:
-  - solana
 
 api_calls: []
 
@@ -189,9 +186,6 @@ build:
   source_dir: "."                       # Path within repo (default: root)
   binary_name: defi-yield           # Compiled output name
 
-chains:
-  - ethereum
-  - base
 
 api_calls:
   - "api.defillama.com"
@@ -224,7 +218,6 @@ git rev-parse HEAD
 | `category` | Yes | One of: `trading-strategy`, `defi-protocol`, `analytics`, `utility`, `security`, `wallet`, `nft` |
 | `tags` | No | Keywords for search |
 | `components.skill.dir` | Yes | Relative path to the directory containing SKILL.md |
-| `chains` | No | List of blockchains the plugin operates on (informational) |
 | `api_calls` | No | List of external API domains the plugin calls (reviewer reference; lint checks against this) |
 
 ### Naming Rules
@@ -381,20 +374,16 @@ Find the optimal swap route to enter a DeFi position.
 
 ---
 
-## 6. Step 4: Declare Chains and API Calls
+## 6. Step 4: Declare API Calls
 
-The only declarations you need are `chains` and `api_calls` — both are top-level fields in plugin.yaml. Actual permissions (wallet access, transaction signing, etc.) are auto-detected by the AI review during submission.
+The only declarations you need are `api_calls` — both are top-level fields in plugin.yaml. Actual permissions (wallet access, transaction signing, etc.) are auto-detected by the AI review during submission.
 
 ```yaml
-chains:
-  - solana
-  - ethereum
 
 api_calls:
   - "api.defillama.com"
 ```
 
-- **`chains`** — list of blockchains your plugin operates on (informational).
 - **`api_calls`** — list of external API domains your plugin calls. The linter checks that any URLs in your SKILL.md match this list.
 
 ---
@@ -421,7 +410,7 @@ Linting ./my-awesome-plugin/...
 Linting ./my-awesome-plugin/...
 
   ❌ [E031] name 'My-Plugin' must be lowercase alphanumeric with hyphens only
-  ❌ [E065] chains or api_calls field is required
+  ❌ [E065] api_calls field is required
   ⚠️  [W091] SKILL.md frontmatter missing recommended field: description
 
 ✗ Plugin 'My-Plugin': 2 error(s), 1 warning(s)
@@ -439,7 +428,7 @@ Fix all errors (❌) before submitting. Warnings (⚠️) are advisory.
 | E035 | Invalid version | Use semantic versioning: `1.0.0`, not `1.0` or `v1.0.0` |
 | E041 | Missing LICENSE | Add a LICENSE file to your submission directory |
 | E052 | Missing SKILL.md | Ensure SKILL.md exists in the path specified by `components.skill.dir` |
-| E065 | Missing chains/api_calls | Add `chains` and/or `api_calls` fields to plugin.yaml |
+| E065 | Missing api_calls | Add `api_calls` field to plugin.yaml |
 | E111 | Binary not allowed | Community plugins cannot include Binary components |
 
 ---
@@ -525,7 +514,7 @@ Phase 3: AI Code Review (Claude)
 A maintainer reviews:
 
 - Does the plugin make sense?
-- Are chains and api_calls accurate?
+- Are api_calls accurate?
 - Is the SKILL.md well-written?
 - Any security concerns?
 
@@ -550,7 +539,7 @@ Your plugin is automatically:
 
 ### Chain or API Change (requires full review)
 
-If your update changes `chains` or `api_calls`, the review will be more thorough. The AI review report will highlight these changes.
+If your update changes `api_calls`, the review will be more thorough. The AI review report will highlight these changes.
 
 ---
 
@@ -561,7 +550,7 @@ If your update changes `chains` or `api_calls`, the review will be more thorough
 - Define skills using SKILL.md
 - Reference any onchainos CLI command
 - Include reference documentation
-- Declare chains and api_calls
+- Declare api_calls
 
 ### What Community Plugins CANNOT Do
 
@@ -656,8 +645,6 @@ build:
   binary_name: my-binary-tool         # Name of the compiled output
   # main: src/index.ts               # Required for typescript/python
 
-chains:
-  - ethereum
 
 api_calls: []
 ```
