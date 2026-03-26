@@ -22,9 +22,31 @@ my-plugin/
 └── README.md
 ```
 
-### Step 2: Edit SKILL.md
+### Step 2: Edit plugin.yaml and SKILL.md
 
-SKILL.md teaches the AI agent how to use your plugin. Write what your plugin does and which `onchainos` commands it uses:
+Fill in `plugin.yaml` with your plugin info:
+
+```yaml
+schema_version: 1
+name: my-plugin
+version: "1.0.0"
+description: "One-line description of what your plugin does"
+author:
+  name: "Your Name"
+  github: "your-github-username"
+license: MIT
+category: utility    # trading-strategy | defi-protocol | analytics | utility | security | wallet | nft
+tags: [keyword1, keyword2]
+
+components:
+  skill:
+    dir: skills/my-plugin
+
+chains: [ethereum]   # which blockchains your plugin operates on
+api_calls: []        # external API domains, if any
+```
+
+Then write `SKILL.md` — it teaches the AI agent how to use your plugin:
 
 ```markdown
 # My Plugin
@@ -37,6 +59,8 @@ onchainos token search --query "ETH" --chain ethereum
 ​```
 **When to use**: when the user asks to find a token.
 ```
+
+> **Important:** All plugins must use [onchainos CLI](https://github.com/okx/onchainos-skills) for on-chain operations (price queries, swaps, wallet interactions, etc.). Do not implement your own blockchain RPC calls, web3 libraries, or direct API integrations. Plugins that bypass onchainos will be rejected during review.
 
 ### Step 3: Check locally
 
