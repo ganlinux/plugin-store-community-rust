@@ -709,8 +709,96 @@ your-username/<your-plugin-name> ← 你自己的 GitHub 仓库（源码）
 | Rust | `Cargo.toml` | `cargo build --release` | 原生二进制 |
 | Go | `go.mod` | `go build` | 原生二进制 |
 | TypeScript | `package.json` + `build.main` | `bun build --compile` | 打包二进制 |
-| Node.js | `package.json` | `npm publish` | npm 包 |
 | Python | `pyproject.toml` + `build.main` | `PyInstaller` | 打包二进制 |
+
+### Build 配置 — 每种语言的完整示例
+
+所有 `build` 字段说明：
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `lang` | 是 | `rust` \| `go` \| `typescript` \| `python` |
+| `source_repo` | 是 | GitHub `owner/repo`，你的源码仓库 |
+| `source_commit` | 是 | 完整 40 位 commit SHA（通过 `git rev-parse HEAD` 获取） |
+| `source_dir` | 否 | 仓库内源码根目录（默认：`.`） |
+| `entry` | 否 | 入口文件覆盖（默认：按语言自动检测） |
+| `binary_name` | 是 | 编译产物的二进制名 |
+| `main` | TS/Python | 入口文件路径（如 `src/index.ts`、`src/main.py`） |
+| `targets` | 否 | 限定编译平台（默认：全部支持的平台） |
+
+#### Rust
+
+```yaml
+build:
+  lang: rust
+  source_repo: "your-org/your-rust-tool"
+  source_commit: "a1b2c3d4e5f6789012345678901234567890abcd"
+  source_dir: "."                        # 默认值，可省略
+  entry: "Cargo.toml"                    # Rust 默认值，可省略
+  binary_name: "your-tool"              # 必须和 Cargo.toml 中的 [[bin]] name 一致
+  targets:                               # 可选，省略则编译全平台
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI 执行：`cargo fetch` → `cargo audit` → `cargo build --release`
+产物：原生二进制（约 5-20MB）
+
+#### Go
+
+```yaml
+build:
+  lang: go
+  source_repo: "your-org/your-go-tool"
+  source_commit: "b2c3d4e5f6789012345678901234567890abcdef"
+  source_dir: "."
+  entry: "go.mod"                        # Go 默认值，可省略
+  binary_name: "your-tool"
+  targets:
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI 执行：`go mod download` → `govulncheck` → `CGO_ENABLED=0 go build -ldflags="-s -w"`
+产物：静态原生二进制（约 5-15MB）
+
+#### TypeScript
+
+```yaml
+build:
+  lang: typescript
+  source_repo: "your-org/your-ts-tool"
+  source_commit: "c3d4e5f6789012345678901234567890abcdef01"
+  source_dir: "."
+  entry: "package.json"                  # TypeScript 默认值，可省略
+  binary_name: "your-tool"
+  main: "src/index.ts"                   # TypeScript 必填
+  targets:
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI 执行：`bun install` → `bun audit` → `bun build --compile src/index.ts --outfile your-tool`
+产物：内嵌 Bun 运行时的独立二进制（约 30-60MB）
+
+#### Python
+
+```yaml
+build:
+  lang: python
+  source_repo: "your-org/your-python-tool"
+  source_commit: "d4e5f6789012345678901234567890abcdef0123"
+  source_dir: "."
+  entry: "pyproject.toml"               # Python 默认值，可省略
+  binary_name: "your-tool"
+  main: "src/main.py"                    # Python 必填
+  targets:
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI 执行：`pip install pyinstaller pip-audit` → `pip install -e .` → `pip-audit` → `pyinstaller --onefile --name your-tool src/main.py`
+产物：内嵌 Python 解释器的独立二进制（约 50-100MB）
 
 ### SKILL.md 作为编排者
 

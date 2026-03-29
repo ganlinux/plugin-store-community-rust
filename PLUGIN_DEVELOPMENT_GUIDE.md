@@ -674,6 +674,95 @@ your-username/<your-plugin-name>           ← Your own GitHub repo (source code
 | TypeScript | `package.json` + `build.main` | `bun build --compile` | Bundled binary |
 | Python | `pyproject.toml` + `build.main` | `PyInstaller` | Bundled binary |
 
+### Build Config — Complete Examples for Each Language
+
+Every `build` field explained:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `lang` | Yes | `rust` \| `go` \| `typescript` \| `python` |
+| `source_repo` | Yes | GitHub `owner/repo` containing your source code |
+| `source_commit` | Yes | Full 40-char commit SHA (get via `git rev-parse HEAD`) |
+| `source_dir` | No | Path within repo to source root (default: `.`) |
+| `entry` | No | Entry file override (default: auto-detected per language) |
+| `binary_name` | Yes | Name of the compiled output binary |
+| `main` | TS/Python only | Entry point file (e.g. `src/index.ts`, `src/main.py`) |
+| `targets` | No | Limit build platforms (default: all supported) |
+
+#### Rust
+
+```yaml
+build:
+  lang: rust
+  source_repo: "your-org/your-rust-tool"
+  source_commit: "a1b2c3d4e5f6789012345678901234567890abcd"
+  source_dir: "."                        # default, can omit
+  entry: "Cargo.toml"                    # default for Rust, can omit
+  binary_name: "your-tool"              # must match [[bin]] name in Cargo.toml
+  targets:                               # optional, omit for all platforms
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI runs: `cargo fetch` → `cargo audit` → `cargo build --release`
+Output: native binary (~5-20MB)
+
+#### Go
+
+```yaml
+build:
+  lang: go
+  source_repo: "your-org/your-go-tool"
+  source_commit: "b2c3d4e5f6789012345678901234567890abcdef"
+  source_dir: "."
+  entry: "go.mod"                        # default for Go, can omit
+  binary_name: "your-tool"
+  targets:
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI runs: `go mod download` → `govulncheck` → `CGO_ENABLED=0 go build -ldflags="-s -w"`
+Output: static native binary (~5-15MB)
+
+#### TypeScript
+
+```yaml
+build:
+  lang: typescript
+  source_repo: "your-org/your-ts-tool"
+  source_commit: "c3d4e5f6789012345678901234567890abcdef01"
+  source_dir: "."
+  entry: "package.json"                  # default for TypeScript, can omit
+  binary_name: "your-tool"
+  main: "src/index.ts"                   # REQUIRED for TypeScript
+  targets:
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI runs: `bun install` → `bun audit` → `bun build --compile src/index.ts --outfile your-tool`
+Output: self-contained binary with embedded Bun runtime (~30-60MB)
+
+#### Python
+
+```yaml
+build:
+  lang: python
+  source_repo: "your-org/your-python-tool"
+  source_commit: "d4e5f6789012345678901234567890abcdef0123"
+  source_dir: "."
+  entry: "pyproject.toml"               # default for Python, can omit
+  binary_name: "your-tool"
+  main: "src/main.py"                    # REQUIRED for Python
+  targets:
+    - x86_64-unknown-linux-gnu
+    - aarch64-apple-darwin
+```
+
+CI runs: `pip install pyinstaller pip-audit` → `pip install -e .` → `pip-audit` → `pyinstaller --onefile --name your-tool src/main.py`
+Output: self-contained binary with embedded Python (~50-100MB)
+
 ### SKILL.md as the Orchestrator
 
 Your SKILL.md tells the AI agent how to use **both** onchainos commands and your custom binary tools:
