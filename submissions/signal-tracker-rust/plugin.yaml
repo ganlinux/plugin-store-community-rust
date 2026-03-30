@@ -1,28 +1,32 @@
-# Plugin manifest — see CONTRIBUTING.md for full guide
 schema_version: 1
 name: signal-tracker-rust
-# alias: "Display Name"
+alias: "Signal Tracker (Rust)"
 version: "1.0.0"
-description: "TODO: One-line description of what this plugin does"
+description: "Track smart money wallet activity and aggregated buy signals — Rust implementation"
 author:
-  name: "TODO: Your Name"
-  github: "TODO: your-github-username"
-  # email: "you@example.com"
+  name: "Mingtao"
+  github: "ganlinux"
 license: MIT
-category: utility    # trading-strategy | defi-protocol | analytics | utility | security | wallet | nft
+category: analytics
 tags:
-  - TODO
+  - smart-money
+  - signals
+  - wallet-tracker
+  - rust
 
 components:
   skill:
     dir: skills/signal-tracker-rust
-  # binary:                          # Uncomment if providing a compiled binary
-  #   repo: your-org/your-repo       # (requires build section)
-  #   asset_pattern: "my-binary-{target}"
-  #   checksums_asset: checksums.txt
+  binary:
+    repo: ganlinux/signal-tracker-rust
+    asset_pattern: "signal-tracker-rust-{target}"
+    checksums_asset: checksums.txt
 
-# External API domains this plugin calls (for reviewer reference)
-# Undeclared URLs in SKILL.md will trigger a lint warning
-api_calls: []
-# api_calls:
-#   - "api.example.com"
+build:
+  lang: rust
+  source_repo: ganlinux/signal-tracker
+  source_commit: "d596337704610cd9e6557966bea19eb7f01f0caf"
+  binary_name: signal-tracker-rust
+
+api_calls:
+  - "www.okx.com"

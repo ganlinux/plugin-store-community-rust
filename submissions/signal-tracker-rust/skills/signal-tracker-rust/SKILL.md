@@ -1,101 +1,116 @@
 ---
 name: signal-tracker-rust
-description: "TODO: Brief description of what this skill does"
+description: "Track smart money wallet activity and aggregated buy signals (rust implementation)"
 version: "1.0.0"
-author: "TODO: Your Name"
+author: "Mingtao"
 tags:
-  - TODO
+  - smart-money
+  - signals
+  - wallet-tracker
 ---
 
 # signal-tracker-rust
 
 ## Overview
 
-TODO: Describe what this skill enables the AI agent to do.
+signal-tracker-rust 让 AI Agent 能够追踪聪明钱钱包的交易动态，并获取聚合买入信号。
+它提供 `signal-tracker-rust` CLI 工具用于格式化展示，所有链上数据查询通过 `onchainos` CLI 完成。
 
-> All on-chain write operations (signing, broadcasting, swaps, contract calls)
-> MUST use onchainos CLI. You are free to query external data sources
-> (third-party DeFi APIs, market data, analytics, etc.).
+> 所有链上交互操作（签名、广播、Swap、合约调用）必须通过 onchainos CLI。
 
 ## Pre-flight Checks
 
-Before using this skill, ensure:
+使用前确认：
 
-1. The `onchainos` CLI is installed and authenticated
-2. Network connectivity is available
+1. `onchainos` CLI 已安装并完成身份认证
+2. `signal-tracker-rust` 二进制已安装（通过 `plugin-store install signal-tracker-rust`）
+3. 运行 `signal-tracker-rust --version` 验证安装
+4. 网络连接正常
 
 ## Commands
 
-Below are working onchainos examples. Replace or extend them with your plugin's logic.
-
-### Search for a Token
+### 追踪聪明钱钱包交易
 
 ```bash
-onchainos token search --query "ETH" --chain ethereum
+signal-tracker-rust track --address <WALLET_ADDRESS> --chain ethereum
 ```
 
-**When to use**: When the user asks to find a token by name, symbol, or address.
-**Output**: Token name, symbol, contract address, chain, price.
+**When to use**: 用户提供钱包地址，想查看该地址的最新 DEX 交易记录。  
+**Output**: 该地址最近的买入/卖出记录，包含代币、金额、时间。
 
-### Get Token Price
+底层调用：
+```bash
+onchainos signal address-tracker --address <WALLET_ADDRESS> --chain ethereum
+```
 
+---
+
+### 获取聚合买入信号
+
+```bash
+signal-tracker-rust signals --chain ethereum
+```
+
+**When to use**: 用户想知道聪明钱/KOL 当前集中买入了哪些代币。  
+**Output**: 按买入次数排序的代币列表，附带代币地址和参与钱包数。
+
+底层调用：
+```bash
+onchainos signal buy-signals --chain ethereum
+```
+
+---
+
+### 查询代币价格
+
+```bash
+signal-tracker-rust price --address <TOKEN_ADDRESS> --chain ethereum
+```
+
+**When to use**: 用户想确认信号中某个代币的当前价格。  
+**Output**: 代币价格（USD）、24h 涨跌幅、成交量。
+
+底层调用：
 ```bash
 onchainos market price --address <TOKEN_ADDRESS> --chain ethereum
 ```
 
-**When to use**: When the user asks for the current price of a specific token.
-**Output**: Current price in USD, 24h change, volume.
+---
 
-### Get Wallet Balance
+### 执行 Swap
+
+如果用户看到信号后想买入，**必须按以下步骤操作**：
+
+**Step 1 — 获取报价**
 
 ```bash
-onchainos portfolio all-balances --address <WALLET_ADDRESS> --chain ethereum
+onchainos swap quote --from USDC --to <TOKEN_ADDRESS> --amount 100 --chain ethereum
 ```
 
-**When to use**: When the user wants to check their token holdings.
-**Output**: List of tokens with balances and USD values.
+**Step 2 — Require user confirmation before executing**
 
-### Swap Tokens
+Show the user the quote details (expected output amount, slippage, fees).
+**You MUST explicitly ask the user to confirm before proceeding.**
+Do NOT execute the swap unless the user explicitly confirms. If the user does not confirm, abort the operation.
 
-```bash
-onchainos swap quote --from ETH --to USDC --amount 1 --chain ethereum
-```
-
-**When to use**: When the user wants to exchange one token for another.
-**Ask user to confirm** the quote before executing:
+**Step 3 — Only after user confirmation, execute the swap**
 
 ```bash
-onchainos swap swap --from ETH --to USDC --amount 1 --chain ethereum
+onchainos swap swap --from USDC --to <TOKEN_ADDRESS> --amount 100 --chain ethereum
 ```
 
 ## Error Handling
 
 | Error | Cause | Resolution |
 |-------|-------|------------|
-| "Token not found" | Invalid token symbol or address | Ask user to verify the token name |
-| "Rate limited" | Too many API requests | Wait 10 seconds and retry once |
-| "Chain not supported" | Wrong chain parameter | Show supported chains: ethereum, solana, base, bsc |
-| "Insufficient balance" | Not enough tokens | Check balance with `onchainos portfolio all-balances` |
+| `Failed to run onchainos` | onchainos 未安装或未在 PATH | 运行 `onchainos --version` 检查安装 |
+| `address-tracker: not found` | onchainos 版本过旧 | 升级 onchainos |
+| `Chain not supported` | 链参数错误 | 支持的链：ethereum, solana, base, bsc |
+| `Rate limited` | 请求过于频繁 | 等待 10 秒后重试 |
 
 ## Skill Routing
 
-- For token swaps → use `okx-dex-swap` skill
-- For wallet balances → use `okx-wallet-portfolio` skill
-- For security scanning → use `okx-security` skill
-- For smart money signals → use `okx-dex-signal` skill
-- For meme token analysis → use `okx-dex-trenches` skill
-
-## onchainos Commands Quick Reference
-
-| Command | Description |
-|---------|-------------|
-| `onchainos token search` | Search tokens by name/symbol/address |
-| `onchainos token info` | Get detailed token information |
-| `onchainos market price` | Get current token price |
-| `onchainos market kline` | Get price chart (candlestick) data |
-| `onchainos swap quote` | Get DEX swap quote |
-| `onchainos swap swap` | Execute DEX swap |
-| `onchainos portfolio all-balances` | Get wallet token balances |
-| `onchainos wallet send` | Transfer tokens (requires user confirmation) |
-| `onchainos security token-scan` | Scan token for risks |
-| `onchainos gateway gas` | Get current gas price |
+- 执行 Swap → 使用 `okx-dex-swap` skill
+- 查钱包余额 → 使用 `okx-wallet-portfolio` skill
+- 代币安全扫描 → 使用 `okx-security` skill
+- Meme 代币分析 → 使用 `okx-dex-trenches` skill
