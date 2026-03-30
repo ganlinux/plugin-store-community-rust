@@ -1,0 +1,28 @@
+# Plugin manifest — see CONTRIBUTING.md for full guide
+schema_version: 1
+name: signal-tracker-rust
+# alias: "Display Name"
+version: "1.0.0"
+description: "TODO: One-line description of what this plugin does"
+author:
+  name: "TODO: Your Name"
+  github: "TODO: your-github-username"
+  # email: "you@example.com"
+license: MIT
+category: utility    # trading-strategy | defi-protocol | analytics | utility | security | wallet | nft
+tags:
+  - TODO
+
+components:
+  skill:
+    dir: skills/signal-tracker-rust
+  # binary:                          # Uncomment if providing a compiled binary
+  #   repo: your-org/your-repo       # (requires build section)
+  #   asset_pattern: "my-binary-{target}"
+  #   checksums_asset: checksums.txt
+
+# External API domains this plugin calls (for reviewer reference)
+# Undeclared URLs in SKILL.md will trigger a lint warning
+api_calls: []
+# api_calls:
+#   - "api.example.com"
